@@ -1,43 +1,39 @@
-const API_BASE = '/api/auth';
+// src/services/apiService.ts or .js
+
+const API_BASE = import.meta.env.DEV
+  ? 'https://freelance-app-backend-dtz1.onrender.com/api'
+  : '/api';
 
 export const apiService = {
-  async register(data: any) {
-    const res = await fetch(`${API_BASE}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: data.role
-      }),
-    });
-    if (!res.ok) {
-      throw new Error(`Registration failed: ${res.status}`);
-    }
-    return res.json();
-  },
-  async login(data: any) {
-    const res = await fetch(`${API_BASE}/login`, {
+  async register(data) {
+    const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      throw new Error(`Login failed: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Registration failed: ${res.status}`);
     return res.json();
   },
-  async getMe(token: string) {
-    const res = await fetch(`${API_BASE}/me`, {
+
+  async login(data) {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Login failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getMe(token) {
+    const res = await fetch(`${API_BASE}/auth/me`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     return res.json();
   },
-  async updateProfile(token: string, data: any) {
-    const res = await fetch(`${API_BASE}/profile`, {
+
+  async updateProfile(token, data) {
+    const res = await fetch(`${API_BASE}/auth/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -47,8 +43,9 @@ export const apiService = {
     });
     return res.json();
   },
-  async changePassword(token: string, data: any) {
-    const res = await fetch(`${API_BASE}/change-password`, {
+
+  async changePassword(token, data) {
+    const res = await fetch(`${API_BASE}/auth/change-password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -58,34 +55,34 @@ export const apiService = {
     });
     return res.json();
   },
-  async logout(token: string) {
-    const res = await fetch(`${API_BASE}/logout`, {
+
+  async logout(token) {
+    const res = await fetch(`${API_BASE}/auth/logout`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
     });
     return res.json();
   },
 
-  async getServices(params: { limit?: number } = {}) {
+  async getServices(params = {}) {
     const query = params.limit ? `?limit=${params.limit}` : '';
-    const res = await fetch(`/api/services${query}`);
+    const res = await fetch(`${API_BASE}/services${query}`);
     return res.json();
   },
 
-  async getGigs(params: { q?: string; category?: string; minPrice?: number; maxPrice?: number; page?: number; limit?: number } = {}) {
+  async getGigs(params = {}) {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) queryParams.append(key, value.toString());
     });
     const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const res = await fetch(`/api/gigs${query}`);
+    const res = await fetch(`${API_BASE}/gigs${query}`);
     return res.json();
   },
 
-  async getServiceById(id: string) {
-    const res = await fetch(`/api/services/${id}`);
+  async getServiceById(id) {
+    const res = await fetch(`${API_BASE}/services/${id}`);
     const data = await res.json();
-    // Transform gig data to service format for compatibility
     if (data.success && data.data) {
       return {
         success: true,
@@ -136,17 +133,17 @@ export const apiService = {
   },
 
   async getCategories() {
-    const res = await fetch('/api/categories');
+    const res = await fetch(`${API_BASE}/categories`);
     return res.json();
   },
 
-  async getReviewsForService(serviceId: string) {
-    const res = await fetch(`/api/reviews/service/${serviceId}`);
+  async getReviewsForService(serviceId) {
+    const res = await fetch(`${API_BASE}/reviews/service/${serviceId}`);
     return res.json();
   },
 
-  async createGig(data: any) {
-    const res = await fetch('/api/gigs', {
+  async createGig(data) {
+    const res = await fetch(`${API_BASE}/gigs`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -158,7 +155,7 @@ export const apiService = {
   },
 
   async getMyGigs() {
-    const res = await fetch('/api/gigs/my-gigs', {
+    const res = await fetch(`${API_BASE}/gigs/my-gigs`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
@@ -166,8 +163,8 @@ export const apiService = {
     return res.json();
   },
 
-  async deleteGig(gigId: string) {
-    const res = await fetch(`/api/gigs/${gigId}`, {
+  async deleteGig(gigId) {
+    const res = await fetch(`${API_BASE}/gigs/${gigId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -176,8 +173,8 @@ export const apiService = {
     return res.json();
   },
 
-  async updateGig(id: string, data: any) {
-    const res = await fetch(`/api/gigs/${id}`, {
+  async updateGig(id, data) {
+    const res = await fetch(`${API_BASE}/gigs/${id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -188,8 +185,23 @@ export const apiService = {
     return res.json();
   },
 
-  async createOrder(data: any) {
-    const res = await fetch('/api/orders', {
+  async uploadImage(formData) {
+    const res = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData,
+    });
+    const result = await res.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Image upload failed');
+    }
+    return result;
+  },
+
+  async createOrder(data) {
+    const res = await fetch(`${API_BASE}/orders`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -200,191 +212,56 @@ export const apiService = {
     return res.json();
   },
 
-  async getOrderById(id: string) {
-    const res = await fetch(`/api/orders/${id}`, {
+  async getOrderById(id) {
+    const res = await fetch(`${API_BASE}/orders/${id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
     });
-    if (!res.ok) {
-      throw new Error(`Failed to load order: ${res.status}`);
-    }
     return res.json();
   },
 
   async getMyOrders() {
-    const res = await fetch('/api/orders', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to load orders: ${res.status}`);
-    }
-    return res.json();
-  },
-
-  async getOrderMessages(orderId: string) {
-    const res = await fetch(`/api/messages/order/${orderId}`, {
+    const res = await fetch(`${API_BASE}/orders`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
     });
     return res.json();
-  },
-
-  async getMessages(conversationId: string) {
-    const res = await fetch(`/api/messages/conversation/${conversationId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to load messages: ${res.status}`);
-    }
-    const text = await res.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    try {
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
-    }
-  },
-
-  async getMessagesByConversation(conversationId: string) {
-    const res = await fetch(`/api/messages/conversation/${conversationId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to load messages: ${res.status}`);
-    }
-    const text = await res.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    try {
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
-    }
   },
 
   async getConversations() {
-    const res = await fetch('/api/messages/conversations', {
+    const res = await fetch(`${API_BASE}/messages/conversations`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
     });
-    if (!res.ok) {
-      throw new Error(`Failed to load conversations: ${res.status}`);
-    }
-    const text = await res.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    try {
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
-    }
-  },
-
-  async getFreelancers() {
-    const res = await fetch('/api/messages/freelancers', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to load freelancers: ${res.status}`);
-    }
-    const text = await res.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    try {
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
-    }
-  },
-
-  async sendMessage(data: { receiverId: string, content: string, orderId?: string }) {
-    const res = await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to send message: ${res.status}`);
-    }
-    const text = await res.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    try {
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
-    }
-  },
-
-  // Payment methods
-  async createCheckoutSession(data: { gigId: string; requirements?: string }) {
-    const res = await fetch('/api/payments/checkout-session', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `Payment failed: ${res.status}`);
-    }
     return res.json();
   },
 
-  // Image upload
-  async uploadImage(formData: FormData) {
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData,
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `Image upload failed: ${res.status}`);
-      }
-      
-      const result = await res.json();
-      if (!result.success) {
-        throw new Error(result.message || 'Image upload failed');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Image upload error:', error);
-      throw error;
-    }
+  async getMessages(conversationId) {
+    const res = await fetch(`${API_BASE}/messages/conversation/${conversationId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+    });
+    return res.json();
   },
 
-  // User management
+  async sendMessage(data) {
+    const res = await fetch(`${API_BASE}/messages`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
   async getUsers() {
-    const res = await fetch('/api/users', {
+    const res = await fetch(`${API_BASE}/users`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
@@ -392,8 +269,8 @@ export const apiService = {
     return res.json();
   },
 
-  async deleteUser(userId: string) {
-    const res = await fetch(`/api/users/${userId}`, {
+  async deleteUser(userId) {
+    const res = await fetch(`${API_BASE}/users/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -402,9 +279,8 @@ export const apiService = {
     return res.json();
   },
 
-  // Admin methods
   async getAdminStats() {
-    const res = await fetch('/api/admin/stats', {
+    const res = await fetch(`${API_BASE}/admin/stats`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
@@ -412,13 +288,24 @@ export const apiService = {
     return res.json();
   },
 
-  // Payment verification
-  async verifyPayment(sessionId: string) {
-    const res = await fetch(`/api/payments/verify/${sessionId}`, {
+  async verifyPayment(sessionId) {
+    const res = await fetch(`${API_BASE}/payments/verify/${sessionId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
     });
     return res.json();
   },
-}; 
+
+  async createCheckoutSession(data) {
+    const res = await fetch(`${API_BASE}/payments/checkout-session`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+};
