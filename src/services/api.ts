@@ -1,8 +1,6 @@
-// src/services/apiService.ts or .js
+// src/services/apiService.ts
 
-const API_BASE = import.meta.env.DEV
-  ? 'https://freelance-app-backend-dtz1.onrender.com/api'
-  : '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export const apiService = {
   async register(data) {
@@ -82,54 +80,7 @@ export const apiService = {
 
   async getServiceById(id) {
     const res = await fetch(`${API_BASE}/services/${id}`);
-    const data = await res.json();
-    if (data.success && data.data) {
-      return {
-        success: true,
-        service: {
-          id: data.data._id,
-          title: data.data.title,
-          description: data.data.description,
-          shortDescription: data.data.description.substring(0, 100) + '...',
-          category: data.data.category,
-          subcategory: data.data.category,
-          tags: data.data.tags || [],
-          images: data.data.images || [],
-          pricing: [
-            {
-              id: 'basic',
-              title: 'Basic Package',
-              description: data.data.description,
-              price: data.data.price,
-              deliveryTime: data.data.deliveryTime || 3,
-              revisions: 2,
-              features: [
-                'Professional quality work',
-                'Fast delivery',
-                '2 revisions included',
-                'Source files included'
-              ]
-            }
-          ],
-          freelancerId: data.data.user?._id || data.data.user,
-          freelancer: data.data.user,
-          rating: data.data.rating || 0,
-          totalReviews: data.data.totalReviews || 0,
-          totalOrders: 0,
-          deliveryTime: data.data.deliveryTime || 3,
-          revisions: 2,
-          features: [
-            'Professional quality work',
-            'Fast delivery',
-            '2 revisions included',
-            'Source files included'
-          ],
-          createdAt: data.data.createdAt || new Date().toISOString(),
-          isActive: true
-        }
-      };
-    }
-    return data;
+    return res.json();
   },
 
   async getCategories() {
@@ -193,11 +144,7 @@ export const apiService = {
       },
       body: formData,
     });
-    const result = await res.json();
-    if (!result.success) {
-      throw new Error(result.message || 'Image upload failed');
-    }
-    return result;
+    return res.json();
   },
 
   async createOrder(data) {
